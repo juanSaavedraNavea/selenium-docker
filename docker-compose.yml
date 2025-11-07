@@ -1,0 +1,33 @@
+version: "3.9"
+
+services:
+  scraper:
+    build: .
+    image: selenium-scraper:latest
+    working_dir: /app
+    shm_size: "2gb"                # Evita errores en /dev/shm
+    environment:
+      - TZ=${TZ:-America/Santiago}
+      - HEADLESS=${HEADLESS:-true} # true/false
+      - LANG=es_CL.UTF-8
+      - PYTHONPATH=/app
+      # Si quieres usar Selenium remoto (Grid o standalone:debug), setea:
+      # - SELENIUM_REMOTE_URL=http://selenium:4444/wd/hub
+    volumes:
+      - ./scripts:/app/scripts
+      - ./utils:/app/utils
+      - ./.env:/app/.env:ro
+    # Para correr un script: docker compose run --rm scraper python scripts/ejemplo_scraping.py
+
+  # Perfil opcional de depuración con navegador visible vía noVNC
+  selenium:
+    image: selenium/standalone-chromium:latest
+    shm_size: "2gb"
+    ports:
+      - "4444:4444"   # WebDriver
+      - "7900:7900"   # noVNC -> http://localhost:7900 (pass: secret)
+    environment:
+      - SE_NODE_MAX_SESSIONS=1
+      - SE_NODE_OVERRIDE_MAX_SESSIONS=true
+      - VNC_NO_PASSWORD=1
+    profiles: ["debug"]
